@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -7,19 +6,16 @@ import time
 from datetime import datetime
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes with appropriate headers
+CORS(app)  
 
-# Database configuration - Configuración para Railway
 database_url = os.environ.get('DATABASE_URL')
-# Si el DATABASE_URL comienza con 'mysql://', cambiamos a 'mysql+pymysql://' para compatibilidad con SQLAlchemy
 if database_url and database_url.startswith('mysql://'):
     database_url = database_url.replace('mysql://', 'mysql+pymysql://', 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///products.db'  # SQLite como fallback
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///products.db' 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Product model
 class Product(db.Model):
     __tablename__ = 'products'
     
@@ -36,12 +32,10 @@ class Product(db.Model):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
-# Health check route
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'healthy', 'time': time.time()})
 
-# Routes
 @app.route('/api/products', methods=['GET'])
 def get_products():
     try:
@@ -110,7 +104,6 @@ def delete_product(product_id):
         app.logger.error(f"Error deleting product {product_id}: {str(e)}")
         return jsonify({'error': f'Failed to delete product with id {product_id}'}), 500
 
-# Search products by name
 @app.route('/api/products/search', methods=['GET'])
 def search_products():
     try:
@@ -121,7 +114,6 @@ def search_products():
         app.logger.error(f"Error searching products: {str(e)}")
         return jsonify({'error': 'Failed to search products'}), 500
 
-# Initialize the database - En un contexto de aplicación para mejor manejo de errores
 def init_db():
     try:
         with app.app_context():
@@ -129,10 +121,8 @@ def init_db():
             print("Database tables created successfully")
     except Exception as e:
         print(f"Error creating database tables: {str(e)}")
-        # No queremos que falle completamente la aplicación si hay un error inicial
-        # Este enfoque permite que la aplicación inicie aunque la DB no esté disponible inmediatamente
 
-# Inicializar la base de datos de manera más segura
+
 init_db()
 
 if __name__ == '__main__':
